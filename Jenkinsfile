@@ -49,7 +49,7 @@ pipeline {
                     extensions: [],
                     userRemoteConfigs: [[
                         credentialsId: 'github_key',
-                        url: 'git@github.com:sontvwork/demo-laravel.git'
+                        url: 'git@github.com:sontvwork/demo-cicd.git'
                     ]]
                 ])
             }
