@@ -16,7 +16,7 @@ def getProductionEnvironments() {
         APP_DEBUG: true,
         APP_URL: 'http://localhost',
         LOG_LEVEL: "debug",
-        ECR_HOST: '',
+        ECR_HOST: '845923198673.dkr.ecr.ap-southeast-1.amazonaws.com/demo-cicd',
     ]
 }
 
