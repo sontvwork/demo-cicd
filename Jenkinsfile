@@ -183,7 +183,7 @@ pipeline {
             }
         }
 
-        stage('Publish Image & Deploy') {
+        stage('Push Image to ECR') {
             steps {
                 withCredentials([
                     string(credentialsId: 'aws_iam_jenkins_secret_key', variable: 'IAM_JENKINS_SECRET_KEY')
@@ -225,7 +225,7 @@ pipeline {
                         #-------------------------------------------------------------------------------
                         export AWS_ACCESS_KEY_ID="\${IAM_JENKINS_ACCESS_KEY_ID}"
                         export AWS_SECRET_ACCESS_KEY="\${IAM_JENKINS_SECRET_KEY}"
-                        export AWS_DEFAULT_REGION="ap-northeast-1"
+                        export AWS_DEFAULT_REGION="ap-southeast-1"
 
                         CREDENTIALS=$(aws sts assume-role \
                           --role-arn "${IAM_JENKINS_ROLE_ARN}" \
