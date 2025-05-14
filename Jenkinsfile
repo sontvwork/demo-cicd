@@ -16,7 +16,7 @@ def getProductionEnvironments() {
         APP_DEBUG: true,
         APP_URL: 'http://localhost',
         LOG_LEVEL: "debug",
-        ECR_HOST: '845923198673.dkr.ecr.ap-southeast-1.amazonaws.com/demo-cicd',
+        ECR_HOST: '845923198673.dkr.ecr.ap-southeast-1.amazonaws.com',
     ]
 }
 
@@ -172,7 +172,7 @@ pipeline {
                         cp -vf "${dockerPath}/Dockerfile" ./
                     fi
 
-                    dockerImageName="demo-app-${APP_ENV}"
+                    dockerImageName="demo-cicd"
                     dockerNoCacheOption=''
                     if [[ "\${BUILD_DOCKER_NO_CACHE}" == "true" ]]; then
                         dockerNoCacheOption='--no-cache'
@@ -235,7 +235,7 @@ pipeline {
                         export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')
                         export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')
 
-                        dockerImageName="demo-app-${APP_ENV}"
+                        dockerImageName="demo-cicd"
                         dockerImageNameWithTag="${dockerImageName}:latest"
                         echo "docker tag $dockerImageName \${ECR_HOST}/$dockerImageNameWithTag"
                         docker tag "$dockerImageNameWithTag" "\${ECR_HOST}/$dockerImageNameWithTag"
