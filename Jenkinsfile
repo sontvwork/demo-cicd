@@ -292,8 +292,6 @@ pipeline {
                     trap '_my_on_trap_exit "${BASH_COMMAND:-}"' EXIT
                     #-------------------------------------------------------------------------------
                     export SSH_KEY="${WORKSPACE}/_tmp_/${BACKEND_PRIVATE_KEY_FILE##*/}"
-                    echo "SSH_KEY: ${SSH_KEY}"
-                    ls -la "${SSH_KEY}"
 
                     echo "SSH to EC2, pull new image and restart container"
                     ssh -o StrictHostKeyChecking=no -i "${SSH_KEY}" ec2-user@${BACKEND_SERVER_IP} << 'EOF'
@@ -322,6 +320,14 @@ EOF
     post {
         // Clean after build
         always {
+            sh '''#!/bin/bash
+                # Xóa các image docker cục bộ 
+                echo "Cleaning up docker images..."
+                docker rmi -f "demo-cicd:latest" || true
+                docker rmi -f "${ECR_HOST}/demo-cicd:latest" || true
+                docker image prune -f
+            '''
+            
             cleanWs(
                 cleanWhenAborted: true,
                 cleanWhenFailure: true,
