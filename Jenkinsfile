@@ -163,6 +163,9 @@ pipeline {
                     }
                     trap '_my_on_trap_exit "${BASH_COMMAND:-}"' EXIT
                     #-------------------------------------------------------------------------------
+                    
+                    echo "Remove git, gitlab, README.md, .env.example"
+                    rm -rf .git .gitlab README.md .env.example
 
                     dockerPath="docker/$ENV"
                     echo 'cp -vf docker/.dockerignore ./'
@@ -289,6 +292,9 @@ pipeline {
                     trap '_my_on_trap_exit "${BASH_COMMAND:-}"' EXIT
                     #-------------------------------------------------------------------------------
                     export SSH_KEY="${WORKSPACE}/_tmp_/${BACKEND_PRIVATE_KEY_FILE##*/}"
+                    echo "SSH_KEY: ${SSH_KEY}"
+                    ls -la "${SSH_KEY}"
+
                     echo "SSH to EC2, pull new image and restart container"
                     ssh -o StrictHostKeyChecking=no -i "${SSH_KEY}" admin@${BACKEND_SERVER_IP} << 'EOF'
                         # Đăng nhập vào ECR
