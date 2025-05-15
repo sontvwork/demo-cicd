@@ -17,6 +17,8 @@ def getProductionEnvironments() {
         APP_URL: 'http://localhost',
         LOG_LEVEL: "debug",
         ECR_HOST: '845923198673.dkr.ecr.ap-southeast-1.amazonaws.com',
+        BACKEND_PRIVATE_KEY_FILE: getFileCredential('backend_private_key_file'),
+        BACKEND_SERVER_IP: '18.142.182.242',
     ]
 }
 
@@ -286,7 +288,26 @@ pipeline {
                     }
                     trap '_my_on_trap_exit "${BASH_COMMAND:-}"' EXIT
                     #-------------------------------------------------------------------------------
-                    # TODO: SSH to EC2, pull new image and restart container
+                    export SSH_KEY="${WORKSPACE}/_tmp_/${BACKEND_PRIVATE_KEY_FILE##*/}"
+                    echo "SSH to EC2, pull new image and restart container"
+                    ssh -o StrictHostKeyChecking=no -i "${SSH_KEY}" admin@${BACKEND_SERVER_IP} << 'EOF'
+                        # Đăng nhập vào ECR
+                        aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin ${ECR_HOST}
+                        
+                        # Pull image mới nhất
+                        docker pull ${ECR_HOST}/demo-cicd:latest
+                        
+                        # Dừng và xóa container hiện tại nếu có
+                        docker stop demo-cicd-container || true
+                        docker rm demo-cicd-container || true
+                        
+                        # Chạy container với image mới
+                        docker run -d --name demo-cicd-container -p 80:80 ${ECR_HOST}/demo-cicd:latest
+                        
+                        # Xóa images cũ không sử dụng
+                        docker image prune -f
+EOF
+                    echo "Deployment completed successfully"
                 '''
             }
         }
