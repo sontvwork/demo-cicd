@@ -294,7 +294,7 @@ pipeline {
                     export SSH_KEY="${WORKSPACE}/_tmp_/${BACKEND_PRIVATE_KEY_FILE##*/}"
 
                     echo "SSH to EC2, pull new image and restart container"
-                    ssh -o StrictHostKeyChecking=no -i "${SSH_KEY}" ec2-user@${BACKEND_SERVER_IP} << 'EOF'
+                    ssh -o StrictHostKeyChecking=no -i "${SSH_KEY}" ec2-user@${BACKEND_SERVER_IP} << EOF
                         # Đăng nhập vào ECR
                         aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin ${ECR_HOST}
                         
