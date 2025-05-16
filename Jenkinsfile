@@ -300,13 +300,16 @@ pipeline {
                         
                         # Pull image mới nhất
                         docker pull ${ECR_HOST}/demo-cicd:latest
+                        # Đổi tên image
+                        docker tag ${ECR_HOST}/demo-cicd:latest demo-cicd:latest
+                        docker rmi ${ECR_HOST}/demo-cicd:latest
                         
                         # Dừng và xóa container hiện tại nếu có
                         docker stop demo-cicd-container || true
                         docker rm demo-cicd-container || true
                         
-                        # Chạy container với image mới
-                        docker run -d --name demo-cicd-container -p 80:80 ${ECR_HOST}/demo-cicd:latest
+                        # Chạy container
+                        docker run -d --name demo-cicd-container -p 80:80 demo-cicd:latest
                         
                         # Xóa images cũ không sử dụng
                         docker image prune -f
