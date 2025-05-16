@@ -18,7 +18,7 @@ def getProductionEnvironments() {
         LOG_LEVEL: "debug",
         ECR_HOST: '845923198673.dkr.ecr.ap-southeast-1.amazonaws.com',
         BACKEND_PRIVATE_KEY_FILE: getFileCredential('backend_private_key_file'),
-        BACKEND_SERVER_IP: '18.142.182.242',
+        BACKEND_SERVER_IP: '47.130.3.18',
     ]
 }
 
