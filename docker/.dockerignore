@@ -11,6 +11,8 @@
 /pre-commit
 /pre-commit-copy.sh
 /README.md
+/_tmp_
+/Jenkinsfile
 
 # Laravel folders
 /node_modules/
