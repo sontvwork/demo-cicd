@@ -18,7 +18,8 @@ WORKDIR /var/www/html
 
 # Copy cấu hình
 COPY docker/prod/php.ini /usr/local/etc/php/php.ini
-COPY docker/prod/php-fpm/ /usr/local/etc/php-fpm.d/
+COPY docker/prod/php-fpm/php-fpm.conf /usr/local/etc/php-fpm.conf
+COPY docker/prod/php-fpm/www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/prod/nginx.conf /etc/nginx/nginx.conf
 COPY docker/prod/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
