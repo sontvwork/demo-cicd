@@ -309,7 +309,7 @@ pipeline {
                         docker rm demo-cicd-container || true
                         
                         # Chạy container
-                        docker run -d --name demo-cicd-container -p 80:80 demo-cicd:latest
+                        docker run -d --name demo-cicd-container -p 80:80 -p 443:443 demo-cicd:latest
                         
                         # Xóa images cũ không sử dụng
                         docker image prune -f
