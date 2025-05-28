@@ -129,61 +129,10 @@ pipeline {
         stage('Build docker image') {
             steps {
                 sh '''#!/usr/bin/env bash
-                    set -euo pipefail
-                    IFS=$'\\t\\n'
-                    shopt -s expand_aliases
-                    #---------------------------------------
-                    _my_temp_dir=$(mktemp -d -t tmp.XXXXXXXXXX)
-                    export _my_temp_dir
-                    #---------------------------------------
-                    function _my_on_trap_err {
-                      local error_code=$?
-                      set +x
-                      local command=${1:-}
-                      local line_no=${2:-}
-                      printf "\\e[31mGot error with exit status %b at line no %b with command: %b\\e[0m\\n" "${error_code}" "${line_no}" "${command}"
-                    }
-                    trap '_my_on_trap_err "${BASH_COMMAND:-}" "${LINENO:-}"' ERR
-                    #: <<-'MY_TRAP_ERR_COMMENT_BLOCK'
-                    export _my_disable_trap_count=${_my_disable_trap_count:-0}
-                    alias _my_disable_trap_err="_my_disable_trap_count=\\\$((_my_disable_trap_count + 1)); set +e; trap - ERR"
-                    alias _my_enable_trap_err="if [[ \\\${_my_disable_trap_count} -gt 0 ]]; then _my_disable_trap_count=\\\$((_my_disable_trap_count - 1)); fi; if [[ \\\${_my_disable_trap_count} -le 0 ]]; then set -e; trap '_my_on_trap_err \\"\\\${BASH_COMMAND:-}\\" \\"\\\${LINENO:-}\\"' ERR; fi"
-                    #MY_TRAP_ERR_COMMENT_BLOCK
-                    #---------------------------------------
-                    function _my_on_trap_exit {
-                      local error_code=$?
-                      set +x
-                      local command=${1:-}
-                      if [[ "${error_code}" != "0" ]]; then
-                        printf "\\e[31mGot error with exit status %b with command: %b\\e[0m\\n" "${error_code}" "${command}"
-                      fi
-                      rm -Rf "${_my_temp_dir}"
-                      printf "EXIT %b\\n" "$0"
-                      exit "${error_code}"
-                    }
-                    trap '_my_on_trap_exit "${BASH_COMMAND:-}"' EXIT
-                    #-------------------------------------------------------------------------------
-                    
-                    echo "Remove git, gitlab, README.md, .env.example"
-                    rm -rf .git .gitlab README.md .env.example
-
-                    dockerPath="docker/$ENV"
-                    echo 'cp -vf docker/.dockerignore ./'
-                    cp -vf docker/.dockerignore ./
-
-                    if [[ -f "${dockerPath}/Dockerfile" ]]; then
-                        printf "\\n\\n\\n\\n"
-                        echo "cp -vf ${dockerPath}/Dockerfile ./"
-                        cp -vf "${dockerPath}/Dockerfile" ./
-                    fi
-
-                    dockerImageName="demo-cicd"
-                    dockerNoCacheOption=''
-                    if [[ "\${BUILD_DOCKER_NO_CACHE}" == "true" ]]; then
-                        dockerNoCacheOption='--no-cache'
-                    fi
-                    echo docker build ${dockerNoCacheOption} -t "$dockerImageName" .
-                    docker build ${dockerNoCacheOption} -t "$dockerImageName" .
+                    # Remove unnecessary files and folders: .git, .gitlab, README.md, .env.example
+                    # Copy .dockerignore file to root directory
+                    # Copy Dockerfile file to root directory
+                    # Build docker image
                 '''
             }
         }
@@ -194,61 +143,8 @@ pipeline {
                     string(credentialsId: 'aws_iam_jenkins_secret_key', variable: 'IAM_JENKINS_SECRET_KEY')
                 ]) {
                     sh '''#!/usr/bin/env bash
-                        set -euo pipefail
-                        IFS=$'\\t\\n'
-                        shopt -s expand_aliases
-                        #---------------------------------------
-                        _my_temp_dir=$(mktemp -d -t tmp.XXXXXXXXXX)
-                        export _my_temp_dir
-                        #---------------------------------------
-                        function _my_on_trap_err {
-                          local error_code=$?
-                          set +x
-                          local command=${1:-}
-                          local line_no=${2:-}
-                          printf "\\e[31mGot error with exit status %b at line no %b with command: %b\\e[0m\\n" "${error_code}" "${line_no}" "${command}"
-                        }
-                        trap '_my_on_trap_err "${BASH_COMMAND:-}" "${LINENO:-}"' ERR
-                        #: <<-'MY_TRAP_ERR_COMMENT_BLOCK'
-                        export _my_disable_trap_count=${_my_disable_trap_count:-0}
-                        alias _my_disable_trap_err="_my_disable_trap_count=\\\$((_my_disable_trap_count + 1)); set +e; trap - ERR"
-                        alias _my_enable_trap_err="if [[ \\\${_my_disable_trap_count} -gt 0 ]]; then _my_disable_trap_count=\\\$((_my_disable_trap_count - 1)); fi; if [[ \\\${_my_disable_trap_count} -le 0 ]]; then set -e; trap '_my_on_trap_err \\"\\\${BASH_COMMAND:-}\\" \\"\\\${LINENO:-}\\"' ERR; fi"
-                        #MY_TRAP_ERR_COMMENT_BLOCK
-                        #---------------------------------------
-                        function _my_on_trap_exit {
-                          local error_code=$?
-                          set +x
-                          local command=${1:-}
-                          if [[ "${error_code}" != "0" ]]; then
-                            printf "\\e[31mGot error with exit status %b with command: %b\\e[0m\\n" "${error_code}" "${command}"
-                          fi
-                          rm -Rf "${_my_temp_dir}"
-                          printf "EXIT %b\\n" "$0"
-                          exit "${error_code}"
-                        }
-                        trap '_my_on_trap_exit "${BASH_COMMAND:-}"' EXIT
-                        #-------------------------------------------------------------------------------
-                        export AWS_ACCESS_KEY_ID="\${IAM_JENKINS_ACCESS_KEY_ID}"
-                        export AWS_SECRET_ACCESS_KEY="\${IAM_JENKINS_SECRET_KEY}"
-                        export AWS_DEFAULT_REGION="ap-southeast-1"
-
-                        CREDENTIALS=$(aws sts assume-role \
-                          --role-arn "${IAM_JENKINS_ROLE_ARN}" \
-                          --role-session-name "JenkinsDeployBackendSession")
-
-                        export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')
-                        export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')
-                        export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')
-
-                        dockerImageName="demo-cicd"
-                        dockerImageNameWithTag="${dockerImageName}:latest"
-                        echo "docker tag $dockerImageName \${ECR_HOST}/$dockerImageNameWithTag"
-                        docker tag "$dockerImageNameWithTag" "\${ECR_HOST}/$dockerImageNameWithTag"
-
-                        aws ecr get-login-password --region "${AWS_DEFAULT_REGION}" | docker login --username AWS --password-stdin "\${ECR_HOST}"
-
-                        echo docker push "\${ECR_HOST}/$dockerImageNameWithTag"
-                        docker push "\${ECR_HOST}/$dockerImageNameWithTag"
+                        # Assume role
+                        # Push image to ECR
                     '''
                 }
             }
@@ -257,64 +153,8 @@ pipeline {
         stage('Publish to EC2') {
             steps {
                 sh '''#!/usr/bin/env bash
-                    set -euo pipefail
-                    IFS=$'\\t\\n'
-                    shopt -s expand_aliases
-                    #---------------------------------------
-                    _my_temp_dir=$(mktemp -d -t tmp.XXXXXXXXXX)
-                    export _my_temp_dir
-                    #---------------------------------------
-                    function _my_on_trap_err {
-                      local error_code=$?
-                      set +x
-                      local command=${1:-}
-                      local line_no=${2:-}
-                      printf "\\e[31mGot error with exit status %b at line no %b with command: %b\\e[0m\\n" "${error_code}" "${line_no}" "${command}"
-                    }
-                    trap '_my_on_trap_err "${BASH_COMMAND:-}" "${LINENO:-}"' ERR
-                    #: <<-'MY_TRAP_ERR_COMMENT_BLOCK'
-                    export _my_disable_trap_count=${_my_disable_trap_count:-0}
-                    alias _my_disable_trap_err="_my_disable_trap_count=\\\$((_my_disable_trap_count + 1)); set +e; trap - ERR"
-                    alias _my_enable_trap_err="if [[ \\\${_my_disable_trap_count} -gt 0 ]]; then _my_disable_trap_count=\\\$((_my_disable_trap_count - 1)); fi; if [[ \\\${_my_disable_trap_count} -le 0 ]]; then set -e; trap '_my_on_trap_err \\"\\\${BASH_COMMAND:-}\\" \\"\\\${LINENO:-}\\"' ERR; fi"
-                    #MY_TRAP_ERR_COMMENT_BLOCK
-                    #---------------------------------------
-                    function _my_on_trap_exit {
-                      local error_code=$?
-                      set +x
-                      local command=${1:-}
-                      if [[ "${error_code}" != "0" ]]; then
-                        printf "\\e[31mGot error with exit status %b with command: %b\\e[0m\\n" "${error_code}" "${command}"
-                      fi
-                      rm -Rf "${_my_temp_dir}"
-                      printf "EXIT %b\\n" "$0"
-                      exit "${error_code}"
-                    }
-                    trap '_my_on_trap_exit "${BASH_COMMAND:-}"' EXIT
-                    #-------------------------------------------------------------------------------
-                    export SSH_KEY="${WORKSPACE}/_tmp_/${BACKEND_PRIVATE_KEY_FILE##*/}"
-
-                    echo "SSH to EC2, pull new image and restart container"
-                    ssh -o StrictHostKeyChecking=no -i "${SSH_KEY}" ec2-user@${BACKEND_SERVER_IP} << EOF
-                        # Đăng nhập vào ECR
-                        aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin ${ECR_HOST}
-                        
-                        # Pull image mới nhất
-                        docker pull ${ECR_HOST}/demo-cicd:latest
-                        # Đổi tên image
-                        docker tag ${ECR_HOST}/demo-cicd:latest demo-cicd:latest
-                        docker rmi ${ECR_HOST}/demo-cicd:latest
-                        
-                        # Dừng và xóa container hiện tại nếu có
-                        docker stop demo-cicd-container || true
-                        docker rm demo-cicd-container || true
-                        
-                        # Chạy container
-                        docker run -d --name demo-cicd-container -p 80:80 -p 443:443 demo-cicd:latest
-                        
-                        # Xóa images cũ không sử dụng
-                        docker image prune -f
-EOF
-                    echo "Deployment completed successfully"
+                    # SSH to EC2
+                    # Run script to pull new image and restart container
                 '''
             }
         }
