@@ -60,7 +60,7 @@
 
                     <main class="mt-6">
                         <div class="grid gap-6">
-                           <span style="color: white; font-size: 3rem; font-weight: bold; text-align: center">DRAI Training</span>
+                           <span style="color: white; font-size: 3rem; font-weight: bold; text-align: center">DRAI Training hẹ hẹ</span>
                         </div>
                     </main>
 
